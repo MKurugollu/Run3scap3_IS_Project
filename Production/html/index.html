@@ -8,12 +8,17 @@
 <script src="../scripts/external.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
 <!-- No Idea Yet -->
 <script src="../scripts/external.js"></script>
 <link rel="stylesheet" href="../css/style.css">
 <!-- Leaflet's Remote CSS and JS files -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+
+
   <style>
     html, body, .fullheight {
       min-height: 100% !important;
@@ -38,15 +43,14 @@
           <p style="padding-top: 20%;font-weight:bold; font-size:160%;">un3scap3 </p>
       </div>
   </div>
-  <h4 class="w3-bar-item" >Upload GPX</h4>
   <center>
-    <!--<div class="upload-btn-wrapper">
-      <button class="btn btn-default">Select file</button>
-      <input type="file" name="myfile" />
-    </div> -->
-    <form id="gpx_input" name="gpx_input">
+
+    <div class="upload-btn-wrapper">
+      <input id = "gpx_input" type="file" name="gpx_input" />
+    </div>
+    <!--<form id="gpx_input" name="gpx_input">
         <input id="input" type="file"> <input type="submit">
-    </form>
+    </form>-->
   </center>
   <a href="#" class="w3-bar-item w3-button">Route</a>
   <a href="#" class="w3-bar-item w3-button">Elevation</a>
@@ -82,22 +86,23 @@
          let pts = $xml.find("trk > trkseg > trkpt");
          let skip = Math.floor(pts.length / 100);
          let markers = [];
-         console.log(skip);
-         console.log($xml);
          for (let pt of pts){
 
            let coords = [parseFloat(pt.getAttribute("lat")), parseFloat(pt.getAttribute("lon"))];
-           console.log(coords)
            latlongs.push(coords);
-           let rate = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'hr')[0].innerHTML;
+           let rate = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'hr')[1].innerHTML;
+           let steps = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'cad')[2].innerHTML;
+           let elevation = pt.getElementsByTagName('ele')[0].innerHTML;
            if(i % skip ===0){
-             L.marker(coords).addTo(mymap);
+             L.marker(coords, {riseOnHover:true}).addTo(mymap);
              let marker = L.marker(coords).addTo(mymap);
-             marker.bindTooltip(rate + " bpm");
+             marker.bindTooltip("Heart rate: "+ rate + " bpm <br />" + "Cadence: "+ steps + " steps/m <br />" + "Elevation: "  + Math.round(elevation * 100) / 100 + " m");
              markers.push(marker);
+             var polyline = L.polyline(latlongs, {color: 'red'}).addTo(mymap);
            }
            i += 1;
          }
+         mymap.fitBounds(latlongs)
        }
     </script>
 
@@ -109,11 +114,10 @@
 
 <script>
 	<!-- Initialize map and set view to chosen coords, in this case centre of London -->
-  var mymap = L.map('mapid', { zoomControl:false });
+  var mymap = L.map('mapid');
   mymap.setView([51.505, -0.09], 13);
-  L.control.zoom({
-       position:'topright'
-  }).addTo(mymap);
+
+  mymap.addControl(new L.Control.Fullscreen());
 
 	<!-- add MapBox Streets (seperate api afaik) tile Layer to map. -->
 	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
@@ -125,8 +129,7 @@
 	}).addTo(mymap);
 
 	<!-- marker -->
-	L.marker([51.5, -0.09]).addTo(mymap)
-		.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
+	L.marker([51.5, -0.09], riseOnHover=true).addTo(mymap).bindTooltip("Heart rate: 99 bpm <br />" + "Cadence: 69 steps/m <br />" + "Elevation: 101 m");
 
 	<!-- Circle on the map -->
 	L.circle([51.508, -0.11], 300, {
@@ -139,7 +142,7 @@
 		[51.509, -0.08],
 		[51.503, -0.06],
 		[51.51, -0.047]
-	]).addTo(mymap).bindPopup("I am a polygon.");
+	]).addTo(mymap).bindPopup("<b>Upload your gpx file at the top left to visualise your run!</b><br /><br /> You can also hover over markers like the one to the left to view details at that specific location of your run!").openPopup();
 
 	<!-- Doc on layers: https://leafletjs.com/reference-1.3.4.html#tilelayer -->
 	<!--  -->
@@ -154,8 +157,6 @@
 
 	var popup = L.popup();
 </script>
-
-
 
 </body>
 </html>
