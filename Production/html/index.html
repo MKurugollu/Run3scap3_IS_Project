@@ -94,8 +94,8 @@
            let steps = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'cad')[2].innerHTML;
            let elevation = pt.getElementsByTagName('ele')[0].innerHTML;
            if(i % skip ===0){
-             L.marker(coords, {riseOnHover:true}).addTo(mymap);
-             let marker = L.marker(coords).addTo(mymap);
+             //L.marker(coords, {riseOnHover:true}).addTo(mymap);
+             let marker = L.marker(coords, {icon: newMarker}).addTo(mymap);
              marker.bindTooltip("Heart rate: "+ rate + " bpm <br />" + "Cadence: "+ steps + " steps/m <br />" + "Elevation: "  + Math.round(elevation * 100) / 100 + " m");
              markers.push(marker);
              var polyline = L.polyline(latlongs, {color: 'red'}).addTo(mymap);
@@ -129,7 +129,18 @@
 	}).addTo(mymap);
 
 	//<!-- marker -->
-	L.marker([51.5, -0.09], riseOnHover=true).addTo(mymap).bindTooltip("Heart rate: 99 bpm <br />" + "Cadence: 69 steps/m <br />" + "Elevation: 101 m");
+
+
+  var newMarker = L.icon({
+    iconUrl: 'marker1.png',
+
+    iconSize:     [10, 10], // size of the icon
+    iconAnchor:   [5, 5], // point of the icon which will correspond to marker's location
+    
+    popupAnchor:  [10, 10] // point from which the popup should open relative to the iconAnchor
+});
+
+  	L.marker([51.5, -0.09], {icon: newMarker}).addTo(mymap).bindTooltip("Heart rate: 99 bpm <br />" + "Cadence: 69 steps/m <br />" + "Elevation: 101 m");
 
 	//<!-- Circle on the map -->
 	L.circle([51.508, -0.11], 300, {
