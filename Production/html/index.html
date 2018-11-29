@@ -5,7 +5,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="../scripts/external.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 
@@ -33,84 +32,356 @@
     }
   </style>
 <body>
-<!-- Sidebar -->
-<div class="w3-sidebar w3-light-grey w3-bar-block" style="width:20%">
-  <div style="float: left; padding-top: 5px; padding-left: 4%">
-    <img src="logo.png" alt="runner" width="100%">
-  </div>
 
 
-    <div class="upload-btn-wrapper">
-      <input id = "gpx_input" type="file" name="gpx_input" />
-    </div>
-    <!--<form id="gpx_input" name="gpx_input">
-        <input id="input" type="file"> <input type="submit">
-    </form>-->
 
-  <a href="#" class="w3-bar-item w3-button">Route</a>
-  <a href="#" class="w3-bar-item w3-button">Elevation</a>
-  <a href="#" class="w3-bar-item w3-button">Heart Rate</a>
-  <a href="#" class="w3-bar-item w3-button">Steps per minute</a>
-  <a href="#" class="w3-bar-item w3-button">Badges</a>
-  <div class="">
+      <div id="wrapper">
 
-  </div>
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper"style="overflow:hidden;">
+        <div style="float: left; padding-top: 5px; padding-left: 4%">
+          <img src="logo.png" alt="runner" width="100%">
+        </div>
+          <ul class="list-group">
+          	<center>
+      	    	<!-- <p id="file-preview"> No File Selected </p>
+      	    	<button type="submit" id="file-button" class="btn btn-default">
+      	    	<span class='glyphicon glyphicon-open'></span> Load File</button> -->
+              <div class="upload-btn-wrapper">
+                <input id = "gpx_input" type="file" name="gpx_input" />
+              </div>
+          	</center>
+              <hr>
+      	    <hr>
+          	<h4>Overlays</h4>
+      	    <div id="overlaysec">
+      	    	<p id="least"></p>
+      	    	<p id="most"></p>
+              </div>
 
-  <a href="#" class="w3-bar-item w3-button">Stats</a>
+      	    <a class="list-group-item list-group-item-action disabled overlay" href="#" id="elevation">Overlay Elevation</a>
+      	    <a class="list-group-item list-group-item-action disabled overlay" href="#" id="heartrate">Overlay Heartrate</a>
+      	    <a class="list-group-item list-group-item-action disabled overlay" href="#" id="cadence">Overlay Cadence</a>
+      	    <a class="list-group-item list-group-item-action disabled overlay" href="#" id="remove">Remove Overlay</a>
 
-</div>
-<script>
-       var readXml=null;
-       $('#gpx_input').change(function(e) {
-           let file = e.target.files[0];
-           if (!file){
-             alert("Not a file");
-             return;
-           }
-           console.log(file);
-           let reader = new FileReader();
-           reader.onload = function(e) {
-               let content =e.target.result;
-               console.log(content);
-               parse_and_plot(content);
-           }
-           reader.readAsText(file);
-       });
+      		<h4>Navigation</h4>
+      		<a class="list-group-item list-group-item-action disabled graph" href="#" id="elegraph">View Graphs</a>
+      		<a class="list-group-item list-group-item-action disabled nav" href="#" id="mapnav">View Map</a>
+          <h4>Stats</h4>
 
-       function parse_and_plot(data){
-         let xmlDoc = $.parseXML(data);
-         let $xml = $(xmlDoc);
-         let name = $xml.find("trk > name").text();
-         let latlongs = [];
-         let i = 0;
-         let pts = $xml.find("trk > trkseg > trkpt");
-         let skip = Math.floor(pts.length / 100);
-         let markers = [];
-         for (let pt of pts){
+          </ul>
 
-           let coords = [parseFloat(pt.getAttribute("lat")), parseFloat(pt.getAttribute("lon"))];
-           latlongs.push(coords);
-           let rate = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'hr')[1].innerHTML;
-           let steps = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'cad')[2].innerHTML;
-           let elevation = pt.getElementsByTagName('ele')[0].innerHTML;
-           if(i % skip ===0){
-             //L.marker(coords, {riseOnHover:true}).addTo(mymap);
-             let marker = L.marker(coords, {icon: newMarker}).addTo(mymap);
-             marker.bindTooltip("Heart rate: "+ rate + " bpm <br />" + "Cadence: "+ steps + " steps/m <br />" + "Elevation: "  + Math.round(elevation * 100) / 100 + " m");
-             markers.push(marker);
-             var polyline = L.polyline(latlongs, {color: 'red'}).addTo(mymap);
-           }
-           i += 1;
-         }
-         mymap.fitBounds(latlongs)
-       }
-    </script>
+      </div>
 
 
-<!-- Page Content -->
-<div style="height: 100%; margin-left:20%">
-	<div id="mapid" class="fullheight" ></div>
-</div>
+      <div id="page-content-wrapper">
+      <div id="main">
+
+      	<div id="mapid"></div>
+      	<br><br>
+      	<!-- shows the data -->
+      	<span id="activity-overview"></span>
+      </div>
+      <div id ="graphs">
+        <h1>Graphs</h1>
+      	<canvas hidden id="eleChart" style="height: 255px; width: 100%;"></canvas>
+      	<canvas hidden id="heartChart" style="height: 255px; width: 100%;"></canvas>
+      	<canvas hidden id="cadChart" style="height: 255px; width: 100%;"></canvas>
+      	<br>
+      </div>
+      </div>
+
+
+      <script>
+
+
+
+
+      var mapEleBounds = function (gpxDoc){
+        var min = null;
+        var max = null;
+        var $xml = $(gpxDoc);
+        $xml.find('trkpt').each(function(){
+          var elevation = $(this).find('ele').text();
+
+          if (min == null || max == null) {
+                    min = elevation;
+                    max = elevation;
+                  }
+
+                  max = Math.max(elevation, max);
+                  min = Math.min(elevation, min);
+        });
+        return [min ,max];
+      };
+
+      var mapHRBounds = function (gpxDoc){
+      	var min = null;
+      	var max = null;
+      	var $xml = $(gpxDoc);
+      	$xml.find('trkpt').each(function(){
+      		var hr = $(this).find('ns3\\:hr').text();
+
+      		if (min == null || max == null) {
+                    min = hr;
+                    max = hr;
+                  }
+
+                  max = Math.max(hr, max);
+                  min = Math.min(hr, min);
+      	});
+      	return [min ,max];
+      };
+
+      var mapCadenceBounds = function (gpxDoc){
+      	var min = null;
+      	var max = null;
+      	var $xml = $(gpxDoc);
+      	$xml.find('trkpt').each(function(){
+      		var cad = $(this).find('ns3\\:cad').text();
+
+      		if (min == null || max == null) {
+                    min = cad;
+                    max = cad;
+                  }
+
+                  max = Math.max(cad, max);
+                  min = Math.min(cad, min);
+      	});
+      	return [min ,max];
+      };
+            var lines = [];
+
+            var elevationBounds;
+            var hrbounds;
+            var cadbounds;
+
+            var $xml;
+
+            var fileupload;
+            var elevationarray = [];
+            var cadence = [];
+            var heartrate = [];
+            var timeArray = [];
+             var readXml=null;
+             $('#gpx_input').change(function(e) {
+                 let file = e.target.files[0];
+                 if (!file){
+                   alert("Not a file");
+                   return;
+                 }
+                 console.log(file);
+                 let reader = new FileReader();
+                 reader.onload = function(e) {
+                     let content =e.target.result;
+                     console.log(content);
+                     parse_and_plot(content);
+                 }
+                 reader.readAsText(file);
+             });
+
+             function parse_and_plot(data){
+               elevationBounds = mapEleBounds(data);
+               hrbounds = mapHRBounds(data);
+               cadbounds = mapCadenceBounds(data);
+
+
+               var elevationarray = [];
+               var heartrate = [];
+               var cadence = [];
+               var timeArray = [];
+
+               let xmlDoc = $.parseXML(data);
+               $xml = $(xmlDoc);
+               var fileupload = true;
+               let name = $xml.find("trk > name").text();
+               let latlongs = [];
+               let i = 0;
+               let pts = $xml.find("trk > trkseg > trkpt");
+               let skip = Math.floor(pts.length / 100);
+               let markers = [];
+               for (let pt of pts){
+
+                 let coords = [parseFloat(pt.getAttribute("lat")), parseFloat(pt.getAttribute("lon"))];
+                 latlongs.push(coords);
+                 let rate = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'hr')[1].innerHTML;
+                 let steps = pt.getElementsByTagName('extensions')[0].getElementsByTagName('*', 'cad')[2].innerHTML;
+                 let elevation = pt.getElementsByTagName('ele')[0].innerHTML;
+                 let gpxtime = pt.getElementsByTagName('time')[0].innerHTML;
+                 var time = new Date(gpxtime);
+                 timeArray.push(time.toLocaleTimeString())
+                 elevationarray.push(elevation);
+                 cadence.push(steps);
+                 heartrate.push(rate);
+                 if(i % skip ===0){
+                   //L.marker(coords, {riseOnHover:true}).addTo(mymap);
+                   let marker = L.marker(coords, {icon: newMarker, opacity: 0.5}).addTo(mymap);
+                   marker.bindTooltip("Heart rate: "+ rate + " bpm <br />" + "Cadence: "+ steps + " steps/m <br />" + "Elevation: "  + Math.round(elevation * 100) / 100 + " m");
+                   markers.push(marker);
+                   var polyline = L.polyline(latlongs, {color: 'blue', weight: '8'}).addTo(mymap);
+                   lines.push(polyline);
+                 }
+                 i += 1;
+               }
+               mymap.fitBounds(latlongs)
+
+
+               var chart = document.getElementById("cadChart");
+               console.log(chart);
+             if(fileupload == true){
+               var ctx = document.getElementById("eleChart").getContext('2d');
+       			  var myChart = new Chart(ctx, {
+                     type: 'line',
+                     data: {
+                       labels: timeArray,
+                       datasets: [{
+                           label: "Elevation (m)",
+                           data: elevationarray,
+                           borderWidth: 1,
+                           borderColor: 'rgba(255,99,132,1)'
+                       }]
+                     },
+                     options: {
+                       title: {
+                           text: "Elevation",
+                           fontSize: 18,
+                           display: true
+                       },
+                       legend: {
+                           display: false
+                       },
+                       scales: {
+                           xAxes: [{
+                               scaleLabel: {
+                                   labelString: "Time",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false,
+                                   maxTicksLimit: 2,
+                                   maxRotation: 0,
+                               }
+                           }],
+                           yAxes: [{
+                               scaleLabel: {
+                                   labelString: "Elevation (m)",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false
+                               }
+                           }]
+                       }
+                   }
+               });
+
+       		var ctx2 = document.getElementById("heartChart").getContext('2d');
+              console.log("I'm in boys")
+               var heartRate = new Chart(ctx2, {
+                   type: 'line',
+                   data: {
+                       labels: timeArray,
+                       datasets: [{
+                           label: "Heart Rate (BPM)",
+                           data: heartrate,
+                           borderWidth: 1,
+                           borderColor: 'rgba(255,99,132,1)'
+                       }]
+                   },
+                   options: {
+                       title: {
+                           text: "Heart Rate",
+                           fontSize: 18,
+                           display: true
+                       },
+                       legend: {
+                           display: false,
+                       },
+                       scales: {
+                           xAxes: [{
+                               scaleLabel: {
+                                   labelString: "Time",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false,
+                                   maxTicksLimit: 2,
+                                   maxRotation: 0,
+                               }
+                           }],
+                           yAxes: [{
+                               scaleLabel: {
+                                   labelString: "Heart Rate (BPM)",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false
+                               }
+                           }]
+                       }
+                   }
+               });
+
+
+               var ctx3 = document.getElementById("cadChart").getContext('2d');
+               var Cadence = new Chart(ctx3, {
+                   type: 'line',
+                   data: {
+                       labels: timeArray,
+                       datasets: [{
+                           data: cadence,
+                           label: "Cadence (RPM)",
+                           borderWidth: 1,
+                           borderColor: 'rgba(255,99,132,1)'
+                       }]
+                   },
+                   options: {
+                       title: {
+                           text: "Cadence",
+                           fontSize: 18,
+                           display: true
+                       },
+                       legend: {
+                           display: false
+                       },
+                       scales: {
+                           xAxes: [{
+                               scaleLabel: {
+                                   labelString: "Time",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false,
+                                   maxTicksLimit: 2,
+                                   maxRotation: 0,
+                               }
+                           }],
+                           yAxes: [{
+                               scaleLabel: {
+                                   labelString: "Cadence (RPM)",
+                                   fontSize: 14,
+                                   display: true
+                               },
+                               ticks: {
+                                   beginAtZero: false
+                               }
+                           }]
+                       }
+                   }
+               });
+       		  }else{
+       			  document.write("no stats to show");
+       		  }
+
+
+          }
+
+          </script>
 
 
 
@@ -171,6 +442,7 @@
 
 	var popup = L.popup();
 </script>
+
 
 </body>
 </html>

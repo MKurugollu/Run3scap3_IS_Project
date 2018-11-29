@@ -11,7 +11,7 @@ html, body {
     overflow: hidden;
 }
 
-#map {
+#mapid {
     margin: auto;
     transition: margin-left .5s;
     height: 100vh;
